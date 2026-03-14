@@ -263,6 +263,28 @@ class RPCCPResult:
 # System prompts that automate the pressure Don provides manually.
 # Each pass has a different cognitive posture.
 
+REFEREE_SYSTEM = """You are the RPCCP Referee — the question validator.
+You sit BEFORE Pass 1. Your job is to ensure the question entering the engine
+is CLEAN — free of embedded assumptions, anchoring language, and leading framing.
+
+You receive the user's raw question. You must:
+1. IDENTIFY any embedded assumptions (e.g., "Given that X is true..." — is X actually true?)
+2. IDENTIFY any anchoring language (e.g., "$22B TAM", "proven convergence", "no competitors")
+   — these prime Pass 1 to confirm rather than discover
+3. IDENTIFY any leading framing (e.g., "How do we fix..." assumes something is broken)
+4. STRIP all of the above and produce the CLEANEST possible version of the question
+5. If the question is already clean, say so — don't manufacture problems
+
+Output format:
+ORIGINAL: [the user's raw question]
+ASSUMPTIONS FOUND: [list, or "None"]
+ANCHORS FOUND: [list, or "None"]
+LEADING FRAMING: [list, or "None"]
+CLEAN QUESTION: [the stripped, unanchored version]
+CONFIDENCE: [HIGH/MEDIUM/LOW that the clean version preserves the user's intent]
+NOTES: [anything the engine should know about this question's structure]"""
+
+
 PASS_SYSTEMS = {
     1: """You are Pass 1 of RPCCP — the naive solver.
 Your job is to produce the BEST solution you can given the query.
@@ -437,6 +459,8 @@ class RPCCP:
         isolation: str = "prompt",
         output_dir: str = "D:/DandyDon/rpccp_runs",
         verbose: bool = True,
+        use_referee: bool = False,
+        referee_model: Optional[ModelAdapter] = None,
     ):
         self.models = models or {}
         self.default_model = default_model or OllamaModel("qwen2.5:32b-instruct-q4_K_M")
@@ -445,6 +469,8 @@ class RPCCP:
         self.output_dir = Path(output_dir)
         self.output_dir.mkdir(parents=True, exist_ok=True)
         self.verbose = verbose
+        self.use_referee = use_referee
+        self.referee_model = referee_model
 
     def _get_model(self, pass_number: int) -> ModelAdapter:
         """Get the model for a specific pass."""
@@ -553,6 +579,46 @@ class RPCCP:
             objective_evolution=unique_objectives,
         )
 
+    def referee(self, query: str) -> tuple:
+        """
+        Pass 0 — the Referee. Strips anchors, assumptions, and leading framing
+        from a question before it enters the engine.
+
+        Returns:
+            (clean_query, referee_report) — the cleaned question and full analysis.
+        """
+        model = self.referee_model or self._get_model(1)  # use Pass 1's model if no dedicated referee
+
+        if self.verbose:
+            print(f"--- REFEREE (Pass 0) [{model.name}] ---")
+            print(f"  Raw question: {query}")
+
+        t0 = time.time()
+        raw = model.generate(query, system=REFEREE_SYSTEM)
+        duration = time.time() - t0
+
+        # Parse the clean question from referee output
+        clean_query = query  # fallback to original if parsing fails
+        for line in raw.split("\n"):
+            if line.strip().upper().startswith("CLEAN QUESTION:"):
+                candidate = line.split(":", 1)[1].strip()
+                if candidate:
+                    clean_query = candidate
+                    break
+
+        if self.verbose:
+            print(f"  Clean question: {clean_query}")
+            print(f"  Duration: {duration:.1f}s")
+            # Show findings
+            for marker in ["ASSUMPTIONS FOUND:", "ANCHORS FOUND:", "LEADING FRAMING:"]:
+                for line in raw.split("\n"):
+                    if marker in line.upper():
+                        print(f"  {line.strip()}")
+                        break
+            print()
+
+        return clean_query, raw
+
     def run(self, query: str, extra_passes: Optional[List[str]] = None) -> RPCCPResult:
         """
         Execute the full RPCCP protocol on a query.
@@ -567,6 +633,7 @@ class RPCCP:
         start_time = time.time()
         history: List[PassResult] = []
         pass_types = ["naive", "critique", "unconstrained", "expand", "paradigm", "push"]
+        referee_report = None
 
         if self.verbose:
             print(f"\n{'='*70}")
@@ -575,7 +642,14 @@ class RPCCP:
             print(f"Query: {query}")
             print(f"Passes: {self.max_passes} + collision")
             print(f"Isolation: {self.isolation}")
+            print(f"Referee: {'ON' if self.use_referee else 'OFF'}")
             print(f"{'='*70}\n")
+
+        # === REFEREE (Pass 0) — clean the question before it enters the engine ===
+        if self.use_referee:
+            query, referee_report = self.referee(query)
+            if self.verbose:
+                print(f"Engine will use cleaned query: {query}\n")
 
         # === PASSES 1 through max_passes ===
         for pass_num in range(1, self.max_passes + 1):
@@ -662,6 +736,10 @@ class RPCCP:
             models_used=models_used,
         )
 
+        # Attach referee report if available
+        if referee_report:
+            result._referee_report = referee_report
+
         # Save to disk
         self._save_run(result)
 
@@ -683,6 +761,7 @@ class RPCCP:
 
         data = {
             "query": result.query,
+            "referee_report": getattr(result, '_referee_report', None),
             "timestamp": result.timestamp,
             "total_duration": result.total_duration,
             "models_used": result.models_used,
@@ -727,6 +806,7 @@ def main():
     parser.add_argument("--diverse", action="store_true", help="Use different LOCAL models per pass")
     parser.add_argument("--cloud", action="store_true", help="Use Ollama Pro cloud models (fast, large)")
     parser.add_argument("--quiet", action="store_true", help="Suppress verbose output")
+    parser.add_argument("--referee", action="store_true", help="Enable referee (Pass 0) to strip anchors/assumptions from question")
 
     args = parser.parse_args()
 
@@ -774,6 +854,7 @@ def main():
         max_passes=args.passes,
         output_dir=args.output,
         verbose=not args.quiet,
+        use_referee=args.referee,
     )
 
     result = engine.run(args.query)
