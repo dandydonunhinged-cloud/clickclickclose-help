@@ -174,6 +174,56 @@
       width: 0%;
     }
 
+    .thinking-box {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 2rem;
+      margin-bottom: 2rem;
+      display: none;
+      text-align: center;
+    }
+
+    .thinking-phase {
+      font-size: 1.1rem;
+      color: var(--accent2);
+      margin-bottom: 0.5rem;
+      min-height: 1.5em;
+      transition: opacity 0.3s;
+    }
+
+    .thinking-detail {
+      font-size: 0.8rem;
+      color: var(--text-dim);
+      font-style: italic;
+      min-height: 1.2em;
+    }
+
+    .thinking-dots {
+      margin: 1rem 0;
+      display: flex;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .thinking-dots span {
+      width: 8px;
+      height: 8px;
+      background: var(--accent);
+      border-radius: 50%;
+      animation: pulse 1.4s ease-in-out infinite;
+    }
+
+    .thinking-dots span:nth-child(2) { animation-delay: 0.2s; }
+    .thinking-dots span:nth-child(3) { animation-delay: 0.4s; }
+    .thinking-dots span:nth-child(4) { animation-delay: 0.6s; }
+    .thinking-dots span:nth-child(5) { animation-delay: 0.8s; }
+
+    @keyframes pulse {
+      0%, 80%, 100% { opacity: 0.2; transform: scale(0.8); }
+      40% { opacity: 1; transform: scale(1.2); }
+    }
+
     .history-section {
       margin-top: 3rem;
       border-top: 1px solid var(--border);
@@ -231,6 +281,12 @@
       <div class="progress-fill" id="progressFill"></div>
     </div>
 
+    <div class="thinking-box" id="thinkingBox">
+      <div class="thinking-dots"><span></span><span></span><span></span><span></span><span></span></div>
+      <div class="thinking-phase" id="thinkingPhase"></div>
+      <div class="thinking-detail" id="thinkingDetail"></div>
+    </div>
+
     <div class="result-card" id="resultCard">
       <h2>CONSENSUS</h2>
       <div class="result-content" id="resultContent"></div>
@@ -247,6 +303,42 @@
     let ws = null;
     let passCount = 0;
     const totalPasses = 7;
+
+    const thinkingMessages = [
+      { phase: "Examining your question from multiple angles", detail: "Each perspective reveals different assumptions" },
+      { phase: "Challenging initial assumptions", detail: "The obvious answer is rarely the complete answer" },
+      { phase: "Exploring unconventional possibilities", detail: "What if the constraints themselves are wrong?" },
+      { phase: "Expanding the problem space", detail: "Looking for dimensions nobody considered" },
+      { phase: "Testing for blind spots", detail: "What are we all missing?" },
+      { phase: "Pressure-testing the strongest ideas", detail: "Only the ideas that survive scrutiny make it through" },
+      { phase: "Building consensus", detail: "Synthesizing the strongest arguments into one answer" },
+    ];
+
+    let thinkingInterval = null;
+
+    function startThinking() {
+      const box = document.getElementById('thinkingBox');
+      box.style.display = 'block';
+      updateThinking(0);
+    }
+
+    function updateThinking(index) {
+      if (index >= thinkingMessages.length) index = thinkingMessages.length - 1;
+      const phase = document.getElementById('thinkingPhase');
+      const detail = document.getElementById('thinkingDetail');
+      phase.style.opacity = '0';
+      detail.style.opacity = '0';
+      setTimeout(() => {
+        phase.textContent = thinkingMessages[index].phase;
+        detail.textContent = thinkingMessages[index].detail;
+        phase.style.opacity = '1';
+        detail.style.opacity = '1';
+      }, 300);
+    }
+
+    function stopThinking() {
+      document.getElementById('thinkingBox').style.display = 'none';
+    }
 
     window.addEventListener('load', loadHistory);
 
@@ -299,6 +391,7 @@
       document.getElementById('resultCard').style.display = 'none';
       document.getElementById('progressBar').style.display = 'block';
       document.getElementById('progressFill').style.width = '0%';
+      startThinking();
       showStatus('Analyzing your question...');
 
       try {
@@ -348,7 +441,7 @@
           passCount++;
           const pct = Math.round((passCount / totalPasses) * 100);
           document.getElementById('progressFill').style.width = pct + '%';
-          showStatus('Analyzing... (' + passCount + '/' + totalPasses + ')');
+          updateThinking(passCount - 1);
           break;
 
         case 'pass_complete':
@@ -358,16 +451,18 @@
 
         case 'collision_start':
           document.getElementById('progressFill').style.width = '90%';
-          showStatus('Building consensus...');
+          updateThinking(6);
           break;
 
         case 'collision_complete':
           document.getElementById('progressFill').style.width = '100%';
+          stopThinking();
           displayResult(msg.full);
           break;
 
         case 'complete':
           hideStatus();
+          stopThinking();
           break;
 
         case 'error':
