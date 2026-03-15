@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>RPCCP — Recursive Thinking Engine</title>
+  <title>Click Click Close — Ask Anything</title>
   <style>
     :root {
       --bg: #0a0a0f;
@@ -16,7 +16,6 @@
       --accent2: #818cf8;
       --green: #22c55e;
       --amber: #f59e0b;
-      --red: #ef4444;
       --cyan: #06b6d4;
     }
 
@@ -30,12 +29,11 @@
     }
 
     .container {
-      max-width: 1200px;
+      max-width: 800px;
       margin: 0 auto;
       padding: 2rem;
     }
 
-    /* Header */
     .header {
       text-align: center;
       margin-bottom: 3rem;
@@ -63,10 +61,7 @@
       letter-spacing: 0.1em;
     }
 
-    /* Input */
-    .input-section {
-      margin-bottom: 2rem;
-    }
+    .input-section { margin-bottom: 2rem; }
 
     .query-box {
       display: flex;
@@ -87,13 +82,8 @@
       transition: border-color 0.2s;
     }
 
-    .query-input:focus {
-      border-color: var(--accent);
-    }
-
-    .query-input::placeholder {
-      color: var(--text-dim);
-    }
+    .query-input:focus { border-color: var(--accent); }
+    .query-input::placeholder { color: var(--text-dim); }
 
     .run-btn {
       background: var(--accent);
@@ -111,151 +101,8 @@
     }
 
     .run-btn:hover { background: var(--accent2); }
-    .run-btn:disabled {
-      opacity: 0.5;
-      cursor: not-allowed;
-    }
+    .run-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
-    /* Passes */
-    .passes-grid {
-      display: grid;
-      gap: 1rem;
-      margin-bottom: 2rem;
-    }
-
-    .pass-card {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 1.25rem;
-      transition: border-color 0.3s;
-    }
-
-    .pass-card.active {
-      border-color: var(--amber);
-      box-shadow: 0 0 20px rgba(245, 158, 11, 0.1);
-    }
-
-    .pass-card.complete {
-      border-color: var(--green);
-    }
-
-    .pass-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 0.75rem;
-    }
-
-    .pass-label {
-      font-size: 0.75rem;
-      text-transform: uppercase;
-      letter-spacing: 0.15em;
-      color: var(--accent2);
-    }
-
-    .pass-model {
-      font-size: 0.7rem;
-      color: var(--text-dim);
-    }
-
-    .pass-objective {
-      font-size: 0.8rem;
-      color: var(--cyan);
-      margin-bottom: 0.5rem;
-      font-style: italic;
-    }
-
-    .pass-content {
-      font-size: 0.8rem;
-      color: var(--text-dim);
-      line-height: 1.6;
-      max-height: 200px;
-      overflow-y: auto;
-      white-space: pre-wrap;
-    }
-
-    .pass-content.expanded {
-      max-height: none;
-    }
-
-    .expand-btn {
-      background: none;
-      border: 1px solid var(--border);
-      border-radius: 4px;
-      color: var(--text-dim);
-      padding: 0.25rem 0.75rem;
-      font-size: 0.7rem;
-      cursor: pointer;
-      margin-top: 0.5rem;
-      font-family: inherit;
-    }
-
-    .expand-btn:hover { color: var(--text); border-color: var(--accent); }
-
-    /* Collision */
-    .collision-card {
-      background: var(--surface);
-      border: 2px solid var(--accent);
-      border-radius: 12px;
-      padding: 2rem;
-      margin-bottom: 2rem;
-    }
-
-    .collision-card h2 {
-      color: var(--accent2);
-      font-size: 1rem;
-      letter-spacing: 0.15em;
-      margin-bottom: 1rem;
-    }
-
-    .real-question {
-      font-size: 1.1rem;
-      color: var(--cyan);
-      line-height: 1.6;
-      margin-bottom: 1rem;
-      padding: 1rem;
-      background: var(--surface2);
-      border-radius: 8px;
-      border-left: 3px solid var(--cyan);
-    }
-
-    .type2-badge {
-      display: inline-block;
-      padding: 0.25rem 0.75rem;
-      border-radius: 999px;
-      font-size: 0.7rem;
-      letter-spacing: 0.1em;
-      font-weight: 600;
-      margin-bottom: 1rem;
-    }
-
-    .type2-badge.detected {
-      background: rgba(34, 197, 94, 0.15);
-      color: var(--green);
-      border: 1px solid var(--green);
-    }
-
-    .type2-badge.not-detected {
-      background: rgba(136, 136, 153, 0.15);
-      color: var(--text-dim);
-      border: 1px solid var(--border);
-    }
-
-    .collision-content {
-      font-size: 0.85rem;
-      line-height: 1.8;
-      color: var(--text);
-      white-space: pre-wrap;
-      max-height: 600px;
-      overflow-y: auto;
-    }
-
-    .collision-content.expanded {
-      max-height: none;
-    }
-
-    /* Status */
     .status-bar {
       text-align: center;
       padding: 1rem;
@@ -263,9 +110,7 @@
       font-size: 0.8rem;
     }
 
-    .status-bar.running {
-      color: var(--amber);
-    }
+    .status-bar.running { color: var(--amber); }
 
     .spinner {
       display: inline-block;
@@ -281,7 +126,54 @@
 
     @keyframes spin { to { transform: rotate(360deg); } }
 
-    /* History */
+    .result-card {
+      background: var(--surface);
+      border: 2px solid var(--accent);
+      border-radius: 12px;
+      padding: 2rem;
+      margin-bottom: 2rem;
+      display: none;
+    }
+
+    .result-card h2 {
+      color: var(--accent2);
+      font-size: 1rem;
+      letter-spacing: 0.15em;
+      margin-bottom: 1rem;
+    }
+
+    .result-content {
+      font-size: 0.85rem;
+      line-height: 1.8;
+      color: var(--text);
+      white-space: pre-wrap;
+    }
+
+    .result-content h1, .result-content h2, .result-content h3 {
+      color: var(--accent2);
+      margin: 1rem 0 0.5rem;
+    }
+
+    .result-content strong { color: var(--text); }
+    .result-content em { color: var(--cyan); }
+
+    .progress-bar {
+      width: 100%;
+      height: 4px;
+      background: var(--surface2);
+      border-radius: 2px;
+      margin-bottom: 1rem;
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: var(--accent);
+      border-radius: 2px;
+      transition: width 0.5s ease;
+      width: 0%;
+    }
+
     .history-section {
       margin-top: 3rem;
       border-top: 1px solid var(--border);
@@ -309,69 +201,43 @@
     }
 
     .history-item:hover { border-color: var(--accent); }
+    .history-query { font-size: 0.85rem; color: var(--text); flex: 1; }
+    .history-meta { font-size: 0.7rem; color: var(--text-dim); text-align: right; margin-left: 1rem; }
 
-    .history-query {
-      font-size: 0.85rem;
-      color: var(--text);
-      flex: 1;
-    }
-
-    .history-meta {
-      font-size: 0.7rem;
-      color: var(--text-dim);
-      text-align: right;
-      margin-left: 1rem;
-    }
-
-    .history-type2 {
-      color: var(--green);
-      font-size: 0.65rem;
-      letter-spacing: 0.1em;
-    }
-
-    /* Scrollbar */
     ::-webkit-scrollbar { width: 6px; }
     ::-webkit-scrollbar-track { background: var(--surface); }
     ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
     ::-webkit-scrollbar-thumb:hover { background: var(--text-dim); }
-
-    /* Markdown-like formatting in content */
-    .collision-content h1, .collision-content h2, .collision-content h3 {
-      color: var(--accent2);
-      margin: 1rem 0 0.5rem;
-    }
-
-    .collision-content strong { color: var(--text); }
-    .collision-content em { color: var(--cyan); }
   </style>
 </head>
 <body>
   <div class="container">
     <div class="header">
-      <h1>RPCCP</h1>
-      <div class="subtitle">RECURSIVE PRECISION COGNITIVE CALIBRATION PROTOCOL</div>
-      <div class="tagline">It doesn't find answers. It finds questions.</div>
+      <h1>CLICK CLICK CLOSE</h1>
+      <div class="subtitle">ASK ANYTHING</div>
+      <div class="tagline">5 models debate until they agree. You get the consensus.</div>
     </div>
 
     <div class="input-section">
       <div class="query-box">
-        <input
-          type="text"
-          class="query-input"
-          id="queryInput"
-          placeholder="Ask anything. The engine will find the real question."
-          autofocus
-        />
-        <button class="run-btn" id="runBtn" onclick="startRun()">RUN</button>
+        <input type="text" class="query-input" id="queryInput" placeholder="Ask your question..." autofocus />
+        <button class="run-btn" id="runBtn" onclick="startRun()">ASK</button>
       </div>
     </div>
 
     <div id="statusBar" class="status-bar" style="display:none;"></div>
-    <div id="passesContainer" class="passes-grid"></div>
-    <div id="collisionContainer" style="display:none;"></div>
+
+    <div class="progress-bar" id="progressBar" style="display:none;">
+      <div class="progress-fill" id="progressFill"></div>
+    </div>
+
+    <div class="result-card" id="resultCard">
+      <h2>CONSENSUS</h2>
+      <div class="result-content" id="resultContent"></div>
+    </div>
 
     <div class="history-section" id="historySection">
-      <h2>PREVIOUS RUNS</h2>
+      <h2>PREVIOUS QUESTIONS</h2>
       <div id="historyList"></div>
     </div>
   </div>
@@ -379,8 +245,9 @@
   <script>
     const API = window.location.origin;
     let ws = null;
+    let passCount = 0;
+    const totalPasses = 7;
 
-    // Load history on page load
     window.addEventListener('load', loadHistory);
 
     document.getElementById('queryInput').addEventListener('keydown', (e) => {
@@ -399,7 +266,6 @@
           <div class="history-item" onclick="loadRun('${r.id}')">
             <div class="history-query">${escapeHtml(r.query)}</div>
             <div class="history-meta">
-              ${r.type2 ? '<div class="history-type2">TYPE-2 DETECTED</div>' : ''}
               <div>${Math.round(r.duration)}s</div>
             </div>
           </div>
@@ -413,34 +279,11 @@
       try {
         const res = await fetch(`${API}/api/runs/${runId}`);
         const data = await res.json();
-        displaySavedRun(data);
+        displayResult(data.final_synthesis || data.collision || 'No consensus reached.');
+        document.getElementById('queryInput').value = data.query || '';
       } catch (e) {
         console.error('Failed to load run:', e);
       }
-    }
-
-    function displaySavedRun(data) {
-      const container = document.getElementById('passesContainer');
-      container.innerHTML = '';
-
-      // Display passes
-      if (data.passes) {
-        data.passes.forEach(p => {
-          addPassCard(p.pass_number, p.pass_type, p.model_used, p.objective_function, p.response, true);
-        });
-      }
-
-      // Display collision
-      if (data.final_synthesis) {
-        showCollision(
-          data.real_question || '',
-          data.type2_detected || false,
-          data.objective_evolution || [],
-          data.final_synthesis
-        );
-      }
-
-      document.getElementById('queryInput').value = data.query || '';
     }
 
     async function startRun() {
@@ -450,15 +293,15 @@
 
       const btn = document.getElementById('runBtn');
       btn.disabled = true;
-      btn.textContent = 'RUNNING...';
+      btn.textContent = 'THINKING...';
+      passCount = 0;
 
-      // Clear previous results
-      document.getElementById('passesContainer').innerHTML = '';
-      document.getElementById('collisionContainer').style.display = 'none';
-      showStatus('Initializing...');
+      document.getElementById('resultCard').style.display = 'none';
+      document.getElementById('progressBar').style.display = 'block';
+      document.getElementById('progressFill').style.width = '0%';
+      showStatus('Analyzing your question...');
 
       try {
-        // Start run via REST
         const res = await fetch(`${API}/api/run`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -466,7 +309,6 @@
         });
         const { run_id } = await res.json();
 
-        // Connect WebSocket for streaming
         const wsUrl = `${API.replace('http', 'ws')}/api/ws/${run_id}`;
         ws = new WebSocket(wsUrl);
 
@@ -477,23 +319,22 @@
 
         ws.onclose = () => {
           btn.disabled = false;
-          btn.textContent = 'RUN';
+          btn.textContent = 'ASK';
           hideStatus();
+          document.getElementById('progressBar').style.display = 'none';
           loadHistory();
         };
 
         ws.onerror = (e) => {
-          console.error('WebSocket error:', e);
           btn.disabled = false;
-          btn.textContent = 'RUN';
-          showStatus('Connection error. Is the server running?');
+          btn.textContent = 'ASK';
+          showStatus('Connection error. Please try again.');
         };
 
       } catch (e) {
-        console.error('Failed to start run:', e);
         btn.disabled = false;
-        btn.textContent = 'RUN';
-        showStatus('Failed to connect to server.');
+        btn.textContent = 'ASK';
+        showStatus('Failed to connect.');
       }
     }
 
@@ -504,20 +345,25 @@
           break;
 
         case 'pass_start':
-          showStatus(`Pass ${msg.pass}/${6}: ${msg.pass_type.toUpperCase()} [${msg.model}]`);
-          addPassCard(msg.pass, msg.pass_type, msg.model, '', '', false);
+          passCount++;
+          const pct = Math.round((passCount / totalPasses) * 100);
+          document.getElementById('progressFill').style.width = pct + '%';
+          showStatus('Analyzing... (' + passCount + '/' + totalPasses + ')');
           break;
 
         case 'pass_complete':
-          updatePassCard(msg.pass, msg.objective, msg.full, true);
+          const pct2 = Math.round((passCount / totalPasses) * 100);
+          document.getElementById('progressFill').style.width = pct2 + '%';
           break;
 
         case 'collision_start':
-          showStatus(`COLLISION [${msg.model}]`);
+          document.getElementById('progressFill').style.width = '90%';
+          showStatus('Building consensus...');
           break;
 
         case 'collision_complete':
-          showCollision(msg.real_question, msg.type2_detected, msg.objective_evolution, msg.full);
+          document.getElementById('progressFill').style.width = '100%';
+          displayResult(msg.full);
           break;
 
         case 'complete':
@@ -525,110 +371,23 @@
           break;
 
         case 'error':
-          showStatus(`Error: ${msg.message}`);
+          showStatus('Error: ' + msg.message);
           break;
       }
     }
 
-    function addPassCard(num, type, model, objective, content, complete) {
-      const container = document.getElementById('passesContainer');
-      const card = document.createElement('div');
-      card.className = `pass-card ${complete ? 'complete' : 'active'}`;
-      card.id = `pass-${num}`;
-      card.innerHTML = `
-        <div class="pass-header">
-          <span class="pass-label">Pass ${num} — ${type.toUpperCase()}</span>
-          <span class="pass-model">${model}</span>
-        </div>
-        ${objective ? `<div class="pass-objective">${escapeHtml(objective)}</div>` : ''}
-        <div class="pass-content" id="pass-content-${num}">${content ? escapeHtml(content).substring(0, 500) + '...' : '<span class="spinner"></span> Running...'}</div>
-        ${content ? `<button class="expand-btn" onclick="toggleExpand(this, ${num})">Show full</button>` : ''}
-      `;
-      card.dataset.full = content || '';
-      container.appendChild(card);
-    }
-
-    function updatePassCard(num, objective, content, complete) {
-      const card = document.getElementById(`pass-${num}`);
-      if (!card) return;
-      card.className = `pass-card ${complete ? 'complete' : 'active'}`;
-      card.dataset.full = content;
-
-      const objDiv = card.querySelector('.pass-objective');
-      if (objDiv) {
-        objDiv.textContent = objective;
-      } else {
-        const header = card.querySelector('.pass-header');
-        const newObj = document.createElement('div');
-        newObj.className = 'pass-objective';
-        newObj.textContent = objective;
-        header.after(newObj);
-      }
-
-      const contentDiv = document.getElementById(`pass-content-${num}`);
-      contentDiv.textContent = content.substring(0, 500) + '...';
-
-      // Add expand button
-      if (!card.querySelector('.expand-btn')) {
-        const btn = document.createElement('button');
-        btn.className = 'expand-btn';
-        btn.textContent = 'Show full';
-        btn.onclick = function() { toggleExpand(this, num); };
-        card.appendChild(btn);
-      }
-    }
-
-    function toggleExpand(btn, num) {
-      const card = document.getElementById(`pass-${num}`) || btn.closest('.collision-card');
-      const content = card.querySelector('.pass-content, .collision-content');
-      if (content.classList.contains('expanded')) {
-        content.classList.remove('expanded');
-        const full = card.dataset.full || '';
-        content.textContent = full.substring(0, 500) + '...';
-        btn.textContent = 'Show full';
-      } else {
-        content.classList.add('expanded');
-        content.textContent = card.dataset.full || content.textContent;
-        btn.textContent = 'Collapse';
-      }
-    }
-
-    function showCollision(realQuestion, type2, evolution, full) {
-      const container = document.getElementById('collisionContainer');
-      container.style.display = 'block';
-      container.innerHTML = `
-        <div class="collision-card" data-full="${escapeAttr(full)}">
-          <h2>COLLISION SYNTHESIS</h2>
-          <span class="type2-badge ${type2 ? 'detected' : 'not-detected'}">
-            TYPE-2 RECURSION ${type2 ? 'DETECTED' : 'NOT DETECTED'}
-          </span>
-          <div class="real-question">${escapeHtml(realQuestion)}</div>
-          <div class="collision-content">${escapeHtml(full).substring(0, 2000)}${full.length > 2000 ? '...' : ''}</div>
-          ${full.length > 2000 ? '<button class="expand-btn" onclick="toggleCollision(this)">Show full</button>' : ''}
-        </div>
-      `;
-    }
-
-    function toggleCollision(btn) {
-      const card = btn.closest('.collision-card');
-      const content = card.querySelector('.collision-content');
-      const full = card.dataset.full;
-      if (content.classList.contains('expanded')) {
-        content.classList.remove('expanded');
-        content.textContent = full.substring(0, 2000) + '...';
-        btn.textContent = 'Show full';
-      } else {
-        content.classList.add('expanded');
-        content.textContent = full;
-        btn.textContent = 'Collapse';
-      }
+    function displayResult(text) {
+      const card = document.getElementById('resultCard');
+      const content = document.getElementById('resultContent');
+      card.style.display = 'block';
+      content.textContent = text;
     }
 
     function showStatus(msg) {
       const bar = document.getElementById('statusBar');
       bar.style.display = 'block';
       bar.className = 'status-bar running';
-      bar.innerHTML = `<span class="spinner"></span> ${escapeHtml(msg)}`;
+      bar.innerHTML = '<span class="spinner"></span> ' + escapeHtml(msg);
     }
 
     function hideStatus() {
@@ -639,10 +398,6 @@
       const div = document.createElement('div');
       div.textContent = str;
       return div.innerHTML;
-    }
-
-    function escapeAttr(str) {
-      return str.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
     }
   </script>
 </body>
