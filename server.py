@@ -43,7 +43,7 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=ALLOWED_ORIGINS,
     allow_methods=["GET", "POST"],
-    allow_headers=["Authorization", "Content-Type"],
+    allow_headers=["Authorization", "Content-Type", "X-Demo-Key"],
 )
 
 # Runs storage — JSON files on disk, or DATABASE_URL for Postgres
@@ -100,11 +100,43 @@ def load_api_keys():
 
 load_api_keys()
 
+# Demo keys — shareable links that bypass payment, limited runs
+# Set via env: RPCCP_DEMO_KEYS=key1,key2,key3
+# Each key gets 5 runs total, then it's dead
+# Share as: clickclickclose.help?key=key1
+DEMO_MAX_RUNS = int(os.environ.get("RPCCP_DEMO_MAX_RUNS", "5"))
+DEMO_KEYS: dict = {}  # key -> runs_remaining
+
+def load_demo_keys():
+    raw = os.environ.get("RPCCP_DEMO_KEYS", "")
+    if not raw:
+        return
+    for key in raw.split(","):
+        key = key.strip()
+        if key:
+            DEMO_KEYS[key] = DEMO_MAX_RUNS
+
+load_demo_keys()
+
 
 # ── Auth & Rate Limiting ───────────────────────────────────
 
 def get_client_id(request: Request, authorization: Optional[str] = Header(None)) -> tuple:
-    """Returns (client_id, tier). Checks API key first, falls back to IP."""
+    """Returns (client_id, tier). Checks demo key, API key, falls back to IP."""
+
+    # Check demo key from query param or X-Demo-Key header
+    demo_key = request.query_params.get("key") or request.headers.get("x-demo-key")
+    if demo_key:
+        remaining = DEMO_KEYS.get(demo_key)
+        if remaining is None:
+            raise HTTPException(status_code=403, detail="Invalid or expired demo key.")
+        if remaining <= 0:
+            raise HTTPException(
+                status_code=403,
+                detail="Demo key expired — all 5 runs used. Subscribe at clickclickclose.help for unlimited access."
+            )
+        return f"demo:{demo_key}", "demo"
+
     if authorization and authorization.startswith("Bearer "):
         key = authorization[7:]
         key_hash = hashlib.sha256(key.encode()).hexdigest()
@@ -121,6 +153,10 @@ def get_client_id(request: Request, authorization: Optional[str] = Header(None))
 def check_rate_limit(client_id: str, tier: str):
     """Enforce rate limits by tier."""
     now = time.time()
+
+    if tier == "demo":
+        # Demo uses hard run counter, not time-based rate limiting
+        return
 
     if tier in ("pro", "teams"):
         # Pro/Teams: 60 runs/hour (generous)
@@ -242,6 +278,15 @@ async def start_run(payload: dict, request: Request, authorization: Optional[str
     query = validate_query(payload.get("query", ""))
     check_rate_limit(client_id, tier)
 
+    # Burn one demo run
+    if tier == "demo":
+        demo_key = request.query_params.get("key") or request.headers.get("x-demo-key")
+        if demo_key and demo_key in DEMO_KEYS:
+            DEMO_KEYS[demo_key] -= 1
+            runs_left = DEMO_KEYS[demo_key]
+        else:
+            runs_left = 0
+
     run_id = str(uuid.uuid4())[:8]
     mode = payload.get("mode", "cloud")
 
@@ -254,7 +299,10 @@ async def start_run(payload: dict, request: Request, authorization: Optional[str
         "started": datetime.now(timezone.utc).isoformat(),
     }
 
-    return {"run_id": run_id, "query": query, "mode": mode, "tier": tier}
+    resp = {"run_id": run_id, "query": query, "mode": mode, "tier": tier}
+    if tier == "demo":
+        resp["runs_remaining"] = runs_left
+    return resp
 
 
 # ── WebSocket for streaming passes ─────────────────────────
